@@ -28,37 +28,37 @@ Base = declarative_base()
 class TipoTransaccion(Base):
     __tablename__ = "tipos_transaccion"
 
-    id = Column(Integer, primary_key=True)
-    nombre = Column(String)
-    descripcion = Column(String)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(50))
+    descripcion = Column(String(150))
 
 
 class CategoriaIngreso(Base):
     __tablename__ = "categorias_ingreso"
 
-    id = Column(Integer, primary_key=True)
-    nombre = Column(String)
-    descripcion = Column(String)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(50))
+    descripcion = Column(String(150))
 
 
 class CategoriaEgreso(Base):
     __tablename__ = "categorias_egreso"
 
-    id = Column(Integer, primary_key=True)
-    nombre = Column(String)
-    descripcion = Column(String)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(50))
+    descripcion = Column(String(150))
 
 
 class Ingreso(Base):
     __tablename__ = "ingresos"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     monto = Column(Float)
     id_tipo_transaccion = Column(
         Integer, ForeignKey("tipos_transaccion.id"), nullable=False
     )
     id_categoria = Column(Integer, ForeignKey("categorias_ingreso.id"), nullable=False)
-    descripcion = Column(String)
+    descripcion = Column(String(150))
     fecha = Column(DateTime)
 
     tipo_transaccion = relationship("TipoTransaccion", backref="ingresos")
@@ -68,13 +68,13 @@ class Ingreso(Base):
 class Egreso(Base):
     __tablename__ = "egresos"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     monto = Column(Float)
     id_tipo_transaccion = Column(
         Integer, ForeignKey("tipos_transaccion.id"), nullable=False
     )
     id_categoria = Column(Integer, ForeignKey("categorias_egreso.id"), nullable=False)
-    descripcion = Column(String)
+    descripcion = Column(String(150))
     fecha = Column(DateTime)
 
     tipo_transaccion = relationship("TipoTransaccion", backref="egresos")
