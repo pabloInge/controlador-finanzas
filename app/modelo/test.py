@@ -18,116 +18,108 @@ class Test(unittest.TestCase):
         Base.metadata.drop_all(engine)
 
     def test_registrar_tipo(self):
-        nuevo_tipo = TipoTransaccionDTO("Envio", "tipo de prueba")
-        ServiceTipoTransaccion().registrar_tipo(nuevo_tipo)
+        dto = TipoTransaccionDTO("Envio", "tipo de prueba")
+        ServiceTipoTransaccion().registrar_tipo(dto)
 
         session = Session()
-        tipo_registrado = session.query(TipoTransaccion).first()
+        tipo = session.query(TipoTransaccion).first()
         session.close()
 
-        self.assertIsNotNone(tipo_registrado)
-        self.assertEqual(tipo_registrado.nombre, nuevo_tipo.nombre)
-        self.assertEqual(tipo_registrado.descripcion, nuevo_tipo.descripcion)
+        self.assertIsNotNone(tipo)
+        self.assertEqual(tipo.nombre, dto.nombre)
+        self.assertEqual(tipo.descripcion, dto.descripcion)
 
     def test_registrar_tipo_nombre(self):
         with self.assertRaises(NombreError):
-            nuevo_tipo = TipoTransaccionDTO("", "tipo de prueba")
-            ServiceTipoTransaccion().registrar_tipo(nuevo_tipo)
+            dto = TipoTransaccionDTO("", "tipo de prueba")
+            ServiceTipoTransaccion().registrar_tipo(dto)
 
     def test_editar_tipo(self):
         session = Session()
-        session.add(
-            TipoTransaccion(id=None, nombre="Envio", descripcion="tipo de prueba")
-        )
+        tipo = TipoTransaccion(nombre="Envio", descripcion="tipo de prueba")
+        session.add(tipo)
         session.commit()
-        id_tipo_registrado = session.query(TipoTransaccion.id).scalar()
+        session.refresh(tipo)
         session.close()
 
-        tipo_editado = TipoTransaccionDTO(
-            "Transporte", "tipo editado", id_tipo_registrado
-        )
-        ServiceTipoTransaccion().editar_tipo(tipo_editado)
-        tipo_modificado = session.query(TipoTransaccion).first()
+        dto = TipoTransaccionDTO("Transporte", "tipo editado", tipo.id)
+        ServiceTipoTransaccion().editar_tipo(dto)
+
+        session.add(tipo)
+        session.refresh(tipo)
         session.close()
 
-        self.assertEqual(id_tipo_registrado, tipo_modificado.id)
-        self.assertEqual(tipo_editado.nombre, tipo_modificado.nombre)
-        self.assertEqual(tipo_editado.descripcion, tipo_modificado.descripcion)
+        self.assertEqual(tipo.nombre, dto.nombre)
+        self.assertEqual(tipo.descripcion, dto.descripcion)
 
     def test_editar_tipo_nombre(self):
         with self.assertRaises(NombreError):
-            tipo_editado = TipoTransaccionDTO("", "tipo de prueba")
-            ServiceTipoTransaccion().editar_tipo(tipo_editado)
+            dto = TipoTransaccionDTO("", "tipo de prueba")
+            ServiceTipoTransaccion().editar_tipo(dto)
 
     def test_eliminar_tipo(self):
         session = Session()
-        session.add(
-            TipoTransaccion(id=None, nombre="Envio", descripcion="tipo de prueba")
-        )
+        tipo = TipoTransaccion(nombre="Envio", descripcion="tipo de prueba")
+        session.add(tipo)
         session.commit()
-        id_tipo_registrado = session.query(TipoTransaccion.id).scalar()
+        session.refresh(tipo)
         session.close()
 
-        ServiceTipoTransaccion().eliminar_tipo(
-            TipoTransaccionDTO("", "", id_tipo_registrado)
-        )
-        tipos = session.query(TipoTransaccion)
+        dto = TipoTransaccionDTO("", "", tipo.id)
+        ServiceTipoTransaccion().eliminar_tipo(dto)
+
+        tipo = session.query(TipoTransaccion).filter_by(id=tipo.id).first()
         session.close()
 
-        self.assertIsNotNone(tipos)
+        self.assertIsNone(tipo)
 
     def test_eliminar_tipo_enUso(self):
         with self.assertRaises(TipoUsoError):
             session = Session()
-            session.add(
-                TipoTransaccion(id=None, nombre="Envio", descripcion="tipo de prueba")
-            )
+            tipo = TipoTransaccion(nombre="Envio", descripcion="tipo de prueba")
+            session.add(tipo)
             session.commit()
-            id_tipo_registrado = session.query(TipoTransaccion.id).scalar()
+            session.refresh(tipo)
             session.close()
 
-            session.add(
-                CategoriaIngreso(
-                    id=None, nombre="Efectivo", descripcion="categoria de prueba"
-                )
-            )
+            categoria = CategoriaIngreso(nombre="Efectivo", descripcion="categoria de prueba")
+            session.add(categoria)
             session.commit()
-            id_categoria_registrada = session.query(CategoriaIngreso.id).scalar()
+            session.refresh(categoria)
             session.close()
 
-            session.add(
-                Ingreso(
-                    id=None,
+            ingreso = Ingreso(
                     monto=100,
-                    id_tipo_transaccion=id_tipo_registrado,
-                    id_categoria=id_categoria_registrada,
+                    id_tipo_transaccion=tipo.id,
+                    id_categoria=categoria.id,
                     descripcion="ingreso de prueba",
                     fecha=datetime.now(),
-                )
-            )
+                    )
+            session.add(ingreso)
             session.commit()
 
-            ServiceTipoTransaccion().eliminar_tipo(
-                TipoTransaccionDTO("", "", id_tipo_registrado)
-            )
+            dto =  TipoTransaccionDTO("", "", tipo.id)
+            ServiceTipoTransaccion().eliminar_tipo(dto)
 
     def test_obtener_tipos(self):
         tipos = [
-            TipoTransaccion(id=None, nombre="Seguro", descripcion="tipo de prueba 1"),
-            TipoTransaccion(id=None, nombre="Hipoteca", descripcion="tipo de prueba 2"),
-            TipoTransaccion(id=None, nombre="Pension", descripcion="tipo de prueba 3"),
+            TipoTransaccion(nombre="Seguro", descripcion="tipo de prueba 1"),
+            TipoTransaccion(nombre="Hipoteca", descripcion="tipo de prueba 2"),
+            TipoTransaccion(nombre="Pension", descripcion="tipo de prueba 3"),
         ]
 
         session = Session()
         session.add_all(tipos)
         session.commit()
 
-        tipos_registrados = ServiceTipoTransaccion().obtener_tipos()
+        dtos = ServiceTipoTransaccion().obtener_tipos()
 
-        for i, tipo_registrado in enumerate(tipos_registrados):
-            self.assertEqual(tipo_registrado.id, tipos[i].id)
-            self.assertEqual(tipo_registrado.nombre, tipos[i].nombre)
-            self.assertEqual(tipo_registrado.descripcion, tipos[i].descripcion)
+        for i, dto in enumerate(dtos):
+            self.assertEqual(dto.id, tipos[i].id)
+            self.assertEqual(dto.nombre, tipos[i].nombre)
+            self.assertEqual(dto.descripcion, tipos[i].descripcion)
+
+        session.close()
 
 
 if __name__ == "__main__":

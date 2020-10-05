@@ -53,7 +53,7 @@ class ServiceTipoTransaccion:
 
     def obtener_tipos(self):
         session = Session()
-        tipos = session.query(TipoTransaccion)
+        tipos = session.query(TipoTransaccion).all()
         session.close()
         return [
             TipoTransaccionDTO(tipo.nombre, tipo.descripcion, tipo.id) for tipo in tipos
