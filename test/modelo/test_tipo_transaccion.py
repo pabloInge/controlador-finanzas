@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pytest import raises
 
-from .recursos import TipoTransaccion, CategoriaIngreso, Ingreso
-from .tipo_transaccion import (
+from app.modelo.recursos import TipoTransaccion, CategoriaIngreso, Ingreso
+from app.modelo.tipo_transaccion import (
     ServiceTipoTransaccion,
     TipoTransaccionDTO,
     NombreError,
@@ -18,7 +18,7 @@ def test_registrar_tipo(session):
     tipo = session.query(TipoTransaccion).first()
     session.close()
 
-    assert tipo
+    assert isinstance(tipo, TipoTransaccion)
     assert tipo.nombre == dto.nombre
     assert tipo.descripcion == dto.descripcion
 
@@ -30,8 +30,7 @@ def test_registrar_tipo_nombre(session):
         ServiceTipoTransaccion().registrar_tipo(dto)
 
 
-def test_editar_tipo(session):
-    tipo = TipoTransaccion(nombre="Envio", descripcion="tipo de prueba")
+def test_editar_tipo(session, tipo):
     session.add(tipo)
     session.commit()
     session.refresh(tipo)
@@ -55,8 +54,7 @@ def test_editar_tipo_nombre(session):
         ServiceTipoTransaccion().editar_tipo(dto)
 
 
-def test_eliminar_tipo(session):
-    tipo = TipoTransaccion(nombre="Envio", descripcion="tipo de prueba")
+def test_eliminar_tipo(session, tipo):
     session.add(tipo)
     session.commit()
     session.refresh(tipo)
@@ -71,8 +69,7 @@ def test_eliminar_tipo(session):
     assert not tipo
 
 
-def test_eliminar_tipo_enUso(session):
-    tipo = TipoTransaccion(nombre="Envio", descripcion="tipo de prueba")
+def test_eliminar_tipo_enUso(session, tipo):
     categoria = CategoriaIngreso(nombre="Efectivo", descripcion="categoria de prueba")
     ingreso = Ingreso(
         monto=100,
